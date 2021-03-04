@@ -14,7 +14,7 @@ module.exports = function(){
     }
 
     function getPeople(res, mysql, context, complete){
-        mysql.pool.query("SELECT bsg_people.character_id as id, fname, lname, bsg_planets.name AS homeworld, age FROM bsg_people INNER JOIN bsg_planets ON homeworld = bsg_planets.planet_id", function(error, results, fields){
+        mysql.pool.query("SELECT GuideRegistrations.userID as id, firstName, lastName,password,email,zipCode From GuideRegistrations ", function(error, results, fields){
             if(error){
                 res.write(JSON.stringify(error));
                 res.end();
@@ -25,7 +25,7 @@ module.exports = function(){
     }
 
     function getPeoplebyHomeworld(req, res, mysql, context, complete){
-        var query = "SELECT CG.firstName, lastName, email, zipCode FROM CurrentGuides CG INNER JOIN GuideClimates GC on CG.userID = GC.userID AND GC.climate=?";
+        var query = "SELECT CG.firstName, lastName, email, zipCode FROM GuideRegistrations CG INNER JOIN GuideClimates GC on CG.userID = GC.userID AND GC.climate=?";
         console.log(req.params)
         var inserts = [req.params.homeworld]
         mysql.pool.query(query, inserts, function(error, results, fields){
@@ -38,24 +38,24 @@ module.exports = function(){
         });
     }
 
-    /* Find people whose fname starts with a given string in the req */
-    function getPeopleWithNameLike(req, res, mysql, context, complete) {
-      //sanitize the input as well as include the % character
-       var query = "SELECT bsg_people.character_id as id, fname, lname, bsg_planets.name AS homeworld, age FROM bsg_people INNER JOIN bsg_planets ON homeworld = bsg_planets.planet_id WHERE bsg_people.fname LIKE " + mysql.pool.escape(req.params.s + '%');
-      console.log(query)
-
-      mysql.pool.query(query, function(error, results, fields){
-            if(error){
-                res.write(JSON.stringify(error));
-                res.end();
-            }
-            context.people = results;
-            complete();
-        });
-    }
+    // /* Find people whose fname starts with a given string in the req */
+    // function getPeopleWithNameLike(req, res, mysql, context, complete) {
+    //   //sanitize the input as well as include the % character
+    //    var query = "SELECT bsg_people.character_id as id, fname, lname, bsg_planets.name AS homeworld, age FROM bsg_people INNER JOIN bsg_planets ON homeworld = bsg_planets.planet_id WHERE bsg_people.fname LIKE " + mysql.pool.escape(req.params.s + '%');
+    //   console.log(query)
+    //
+    //   mysql.pool.query(query, function(error, results, fields){
+    //         if(error){
+    //             res.write(JSON.stringify(error));
+    //             res.end();
+    //         }
+    //         context.people = results;
+    //         complete();
+    //     });
+    // }
 
     function getPerson(res, mysql, context, id, complete){
-        var sql = "SELECT character_id as id, fname, lname, homeworld, age FROM bsg_people WHERE character_id = ?";
+        var sql = "SELECT GuideRegistrations.userID as id, firstName, lastName,password,email,zipCode From GuideRegistrations WHERE userID = ?";
         var inserts = [id];
         mysql.pool.query(sql, inserts, function(error, results, fields){
             if(error){
@@ -142,8 +142,8 @@ module.exports = function(){
         console.log(req.body.homeworld)
         console.log(req.body)
         var mysql = req.app.get('mysql');
-        var sql = "INSERT INTO bsg_people (fname, lname, homeworld, age) VALUES (?,?,?,?)";
-        var inserts = [req.body.fname, req.body.lname, req.body.homeworld, req.body.age];
+        var sql = "INSERT INTO GuideRegistrations (firstName, lastName,email,zipCode) VALUES (?,?,?,?)";
+        var inserts = [req.body.firstName, req.body.lastName, req.body.email, req.body.zipCode];
         sql = mysql.pool.query(sql,inserts,function(error, results, fields){
             if(error){
                 console.log(JSON.stringify(error))
@@ -161,8 +161,8 @@ module.exports = function(){
         var mysql = req.app.get('mysql');
         console.log(req.body)
         console.log(req.params.id)
-        var sql = "UPDATE bsg_people SET fname=?, lname=?, homeworld=?, age=? WHERE character_id=?";
-        var inserts = [req.body.fname, req.body.lname, req.body.homeworld, req.body.age, req.params.id];
+        var sql = "UPDATE GuideRegistrations SET firstName=?, lastName=?, email=?, zipCode=? WHERE userID=?";
+        var inserts = [req.body.firstName, req.body.lastName, req.body.email, req.body.zipCode, req.params.id];
         sql = mysql.pool.query(sql,inserts,function(error, results, fields){
             if(error){
                 console.log(error)
@@ -179,7 +179,7 @@ module.exports = function(){
 
     router.delete('/:id', function(req, res){
         var mysql = req.app.get('mysql');
-        var sql = "DELETE FROM bsg_people WHERE character_id = ?";
+        var sql = "DELETE FROM GuideRegistrations WHERE userID = ?";
         var inserts = [req.params.id];
         sql = mysql.pool.query(sql, inserts, function(error, results, fields){
             if(error){
