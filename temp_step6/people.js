@@ -3,7 +3,7 @@ module.exports = function(){
     var router = express.Router();
 
     function getPlanets(res, mysql, context, complete){
-        mysql.pool.query("SELECT climate from GuideClimates", function(error, results, fields){
+        mysql.pool.query("SELECT userID, climate from GuideClimates", function(error, results, fields){
             if(error){
                 res.write(JSON.stringify(error));
                 res.end();
@@ -25,7 +25,7 @@ module.exports = function(){
     }
 
     function getPeoplebyHomeworld(req, res, mysql, context, complete){
-        var query = "SELECT CG.firstName, lastName, email, zipCode FROM GuideRegistrations CG INNER JOIN GuideClimates GC on CG.userID = GC.userID AND GC.climate=?";
+        var query = "SELECT CG.firstName, CG.lastName, CG.email, CG.zipCode, GC.climate FROM GuideRegistrations CG INNER JOIN GuideClimates GC on CG.userID = GC.userID AND GC.climate=?";
         console.log(req.params)
         var inserts = [req.params.homeworld]
         mysql.pool.query(query, inserts, function(error, results, fields){

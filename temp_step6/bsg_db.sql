@@ -1,163 +1,137 @@
--- MySQL dump 10.16  Distrib 10.1.35-MariaDB, for Linux (x86_64)
---
--- Host: localhost    Database: bsg2
--- ------------------------------------------------------
--- Server version	10.1.35-MariaDB
+SET FOREIGN_KEY_CHECKS=OFF; # will be switched to ON at next project part
+# enables us to delete tables from our db
+DROP TABLE IF EXISTS `GuideRegistrations`;
+DROP TABLE IF EXISTS `GuideLogins`;
+DROP TABLE IF EXISTS `GuideAccounts`;
+DROP TABLE IF EXISTS `GuideClimates`;
+DROP TABLE IF EXISTS `GuideLocationHistory`;
 
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8 */;
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
---
--- Table structure for table `bsg_cert`
---
+# === DATABASE TABLES ===
 
-DROP TABLE IF EXISTS `bsg_cert`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `bsg_cert` (
-  `certification_id` int(11) NOT NULL AUTO_INCREMENT,
-  `title` varchar(255) NOT NULL,
-  PRIMARY KEY (`certification_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `bsg_cert`
---
+CREATE TABLE `GuideRegistrations`(
+    /*
+    INTERSECTION TABLE
+    Relationships: M:1 | UserLogins
+                   M:1 | UserLocationHistory
+    */
+                                     `userID` INT(11) PRIMARY KEY NOT NULL AUTO_INCREMENT,
+                                     `lastName` VARCHAR(255) NOT NULL,
+                                     `firstName` VARCHAR(255) NOT NULL,
+                                     `password` VARCHAR(255) NOT NULL,
+                                     `email` VARCHAR(255) NOT NULL,
+                                     `zipCode` INT(11) NOT NULL
+);
 
-LOCK TABLES `bsg_cert` WRITE;
-/*!40000 ALTER TABLE `bsg_cert` DISABLE KEYS */;
-INSERT INTO `bsg_cert` VALUES (1,'Raptor'),(2,'Viper'),(3,'Mechanic'),(4,'Command');
-/*!40000 ALTER TABLE `bsg_cert` ENABLE KEYS */;
-UNLOCK TABLES;
 
---
--- Table structure for table `bsg_cert_people`
---
+CREATE TABLE `GuideLocationHistory`(
+    /*
+    Stores each location User logged in at.
+    Relationships: 1:M | UserRegistrations
+                   M:1 | UserAccounts
+                   M:1 | UserClimates
+    */
+                                       `locationID` INT(11) PRIMARY KEY NOT NULL,
+                                       `zipCode` INT(11) NOT NULL,
+                                       `dateID` DATE NOT NULL
+);
 
-DROP TABLE IF EXISTS `bsg_cert_people`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `bsg_cert_people` (
-  `cid` int(11) NOT NULL DEFAULT '0',
-  `pid` int(11) NOT NULL DEFAULT '0',
-  `certification_date` date NOT NULL,
-  PRIMARY KEY (`cid`,`pid`),
-  KEY `pid` (`pid`),
-  CONSTRAINT `bsg_cert_people_ibfk_1` FOREIGN KEY (`cid`) REFERENCES `bsg_cert` (`certification_id`),
-  CONSTRAINT `bsg_cert_people_ibfk_2` FOREIGN KEY (`pid`) REFERENCES `bsg_people` (`character_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `bsg_cert_people`
---
+CREATE TABLE `GuideAccounts`(
+    /*
+    Contains each User's WeatherVault information.
+    Relationships: 1:M | UserRegistrations
+                   1:M | UserLogins
+    */
+                                `userID`      INT(11) NOT NULL,
+                                `locationID`  INT(11) NOT NULL,
+                                `climate`     VARCHAR(255),
+                                `temperature` INT(11),
+                                `isGuide`     TINYINT,
 
-LOCK TABLES `bsg_cert_people` WRITE;
-/*!40000 ALTER TABLE `bsg_cert_people` DISABLE KEYS */;
-INSERT INTO `bsg_cert_people` VALUES (1,1,'0000-00-00'),(1,2,'0000-00-00'),(2,1,'0000-00-00'),(2,2,'0000-00-00'),(3,1,'0000-00-00'),(3,6,'0000-00-00'),(4,1,'0000-00-00'),(4,6,'0000-00-00');
-/*!40000 ALTER TABLE `bsg_cert_people` ENABLE KEYS */;
-UNLOCK TABLES;
+                                FOREIGN KEY (`userID`) REFERENCES `GuideRegistrations`(`userID`),
 
---
--- Table structure for table `bsg_people`
---
+                                FOREIGN KEY (`locationID`) REFERENCES `GuideLocationHistory`(`locationID`)
+);
 
-DROP TABLE IF EXISTS `bsg_people`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `bsg_people` (
-  `character_id` int(11) NOT NULL AUTO_INCREMENT,
-  `fname` varchar(255) NOT NULL,
-  `lname` varchar(255) DEFAULT NULL,
-  `homeworld` int(11) DEFAULT NULL,
-  `age` int(11) DEFAULT NULL,
-  `race` varchar(5) NOT NULL DEFAULT 'Human',
-  PRIMARY KEY (`character_id`),
-  KEY `homeworld` (`homeworld`),
-  CONSTRAINT `bsg_people_ibfk_1` FOREIGN KEY (`homeworld`) REFERENCES `bsg_planets` (`planet_id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `bsg_people`
---
+CREATE TABLE `GuideLogins`(
+    /*
+    Stores each User’s personal information.
+    Relationships: 1:M | UserSignups
+                   M:1 | UserAccounts
+    */
+                              `userID` INT(11) NOT NULL ,
+                              `lastName` VARCHAR(255) NOT NULL,
+                              `firstName` VARCHAR(255) NOT NULL,
+                              `password` VARCHAR(255) NOT NULL,
+                              `locationID` INT(11),
 
-LOCK TABLES `bsg_people` WRITE;
-/*!40000 ALTER TABLE `bsg_people` DISABLE KEYS */;
-INSERT INTO `bsg_people` VALUES (1,'Will','Adama',20,634,'Human'),(2,'Lee','Adama',3,100,'Human'),(3,'Laura','Roslin',22,100,'Human'),(6,'Saul','Tigh',NULL,71,'Human'),(9,'Callandra','Henderson',NULL,NULL,'Human'),(17,'Trey','Hoover',16,23,'Human'),(18,'Luke','Bob',16,24,'Human'),(20,'Bob','Jones',2,27,'Human');
-/*!40000 ALTER TABLE `bsg_people` ENABLE KEYS */;
-UNLOCK TABLES;
+                              FOREIGN KEY (`userID`) REFERENCES `GuideRegistrations`(`userID`),
 
---
--- Table structure for table `bsg_planets`
---
+                              FOREIGN KEY (`locationID`) REFERENCES `GuideLocationHistory`(`locationID`)
+);
 
-DROP TABLE IF EXISTS `bsg_planets`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `bsg_planets` (
-  `planet_id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) NOT NULL,
-  `population` bigint(20) DEFAULT NULL,
-  `language` varchar(255) DEFAULT NULL,
-  `capital` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`planet_id`),
-  UNIQUE KEY `name` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `bsg_planets`
---
+CREATE TABLE `GuideClimates`(
+    /*
+    Contains the climate of each User.
+    Relationship: 1:M | UserLocationHistory
+    */
+                                `userID` INT(11) NOT NULL,
+                                `locationID` INT(11) ,
+                                `climate` VARCHAR(255),
+                                `temperature` INT(11),
+                                FOREIGN KEY (`userID`)
+                                    REFERENCES `GuideRegistrations`(`userID`),
+                                FOREIGN KEY (`locationID`)
+                                    REFERENCES `GuideLocationHistory`(`locationID`)
+);
 
-LOCK TABLES `bsg_planets` WRITE;
-/*!40000 ALTER TABLE `bsg_planets` DISABLE KEYS */;
-INSERT INTO `bsg_planets` VALUES (1,'Gemenon',2800000000,'Old Gemenese','Oranu'),(2,'Leonis',2600000000,'Leonese','Luminere'),(3,'Caprica',4900000000,'Caprican','Caprica City'),(7,'Sagittaron',1700000000,NULL,'Tawa'),(16,'Aquaria',25000,NULL,NULL),(17,'Canceron',6700000000,NULL,'Hades'),(18,'Libran',2100000,NULL,NULL),(19,'Picon',1400000000,NULL,'Queestown'),(20,'Scorpia',450000000,NULL,'Celeste'),(21,'Tauron',2500000000,'Tauron','Hypatia'),(22,'Virgon',4300000000,NULL,'Boskirk');
-/*!40000 ALTER TABLE `bsg_planets` ENABLE KEYS */;
-UNLOCK TABLES;
+# === DATABASE MANIPULATING ===
 
---
--- Table structure for table `bsg_spaceship`
---
 
-DROP TABLE IF EXISTS `bsg_spaceship`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `bsg_spaceship` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) NOT NULL,
-  `seperate_saucer_section` bit(1) DEFAULT b'0',
-  `length` int(11) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
+DESCRIBE `GuideRegistrations`;
+DESCRIBE `GuideLogins`;
+DESCRIBE `GuideLocationHistory`;
+DESCRIBE `GuideAccounts`;
+DESCRIBE `GuideClimates`;
 
---
--- Dumping data for table `bsg_spaceship`
---
+INSERT INTO `GuideRegistrations` ( firstName, lastName, password, email, zipCode)
+VALUES  ("Davis", "Ryan", "8583495076","2235@gmail.com","1234");
 
-LOCK TABLES `bsg_spaceship` WRITE;
-/*!40000 ALTER TABLE `bsg_spaceship` DISABLE KEYS */;
-INSERT INTO `bsg_spaceship` VALUES (1,'t1','',0),(2,'t2','',0),(3,'t2','',0),(4,'t3','',0),(5,'t4','\0',0),(6,'t5','',0);
-/*!40000 ALTER TABLE `bsg_spaceship` ENABLE KEYS */;
-UNLOCK TABLES;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+select * from UserRegistrations;
 
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-10-28 13:23:54
+INSERT INTO `GuideLocationHistory` (locationID,dateID, zipCode)
+VALUES ("1","2020-11-09", "1234"),
+       ("2","2020-12-09", "1234"),
+       ("3","2020-12-09", "1234");
+
+select * from GuideLocationHistory;
+
+
+INSERT INTO `GuideAccounts` (userID, locationID, climate, temperature, isGuide)
+VALUES ("1","1", "Highlights", "54", NULL),
+       ("2","2","Highlands", "41", "1"),
+       ("3","3","subtropical", "50", "0");
+
+select * from UserAccounts;
+
+
+INSERT INTO `GuideLogins` (userID, firstName,lastName,  password)
+VALUES ("1","Davis", "Ryan", "8583495076"),
+       ("2","Champ", "Pog", "3404206969"),
+       ("3","Jill","Smith", "1234");
+
+select * from GuideLogins;
+
+
+INSERT INTO `GuideClimates` (userID, locationID,climate, temperature)
+VALUES ("1","1","Highlights", 55),
+       ("2","2","Highlands", 41),
+       ("3","3","subtropical", 50);
+
+select * from GuideClimates;
+SET FOREIGN_KEY_CHECKS=ON;
